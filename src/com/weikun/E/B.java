@@ -2,6 +2,8 @@ package com.weikun.E;
 
 import org.junit.Test;
 
+import java.util.HashMap;
+
 /**
  * Created by Administrator on 2016/12/18.
  */
@@ -13,37 +15,37 @@ public class B {
     private static float LOAD_FACTOR = 0.75f;// 值越大，代表其max越大，代表元素越多，越拥挤
     private int max;// 能存的最大的数=capacity*factor
     public  B(){
-        //this(INIT_CAPACITY,LOAD_FACTOR);
+
 
         max=(int)(INIT_CAPACITY*LOAD_FACTOR);
-        INIT_CAPACITY=INIT_CAPACITY;
-        LOAD_FACTOR=LOAD_FACTOR;
+
         container=new Entity[INIT_CAPACITY];//开辟容器空间
     }
 
-
-//    public  B(int init_capacity,float load_factor){
-//        max=(int)(init_capacity*load_factor);
-//        INIT_CAPACITY=init_capacity;
-//        LOAD_FACTOR=load_factor;
-//        container=new Entity[INIT_CAPACITY];//开辟容器空间
-//    }
-//
     @Test
     public void test(){
         long start=System.currentTimeMillis();
 
-        for(int i=0;i<1000000;i++){
-            this.put(i,""+i*10);
+        for(int i=0;i<13;i++){
+            this.put(""+i,""+i*10);
         }
         long end=System.currentTimeMillis();
         System.out.println("插入元素时间是："+(end-start));
-        System.out.println( this.get(98));
+        System.out.println( this.get("1"));
     }
-    public String get(Integer key){
+    //不得不像命运低头，写了好长时间，不能保证hash不重复，用jdkMap源码自带的吧
+    public int hash(Object k) {//防止尽量的不出现重复
+        int h = 0;
+        h ^= k.hashCode();
+        h ^= (h >>> 20) ^ (h >>> 12);
+        return h ^ (h >>> 7) ^ (h >>> 4);
+    }
+
+    public String get(String key){
 
         Entity e=null;
-        int hash=key.hashCode();
+        //不得不像命运低头，写了好长时间，不能保证hash不重复，用jdkMap源码自带的吧
+        int hash = (key == null) ? 0 : hash(key);
 
         int index=this.indexFor(hash,this.container.length);
 
@@ -52,7 +54,7 @@ public class B {
             return null;
         }
         while(e!=null){
-            if((key==e.key)){
+            if((key.equals(e.key))){
                 return e.value;
             }
 
@@ -70,9 +72,11 @@ public class B {
      * @param v:将要存储的值
      * @return
      */
-    public boolean put(Integer k, String v) {
-        int h=k.hashCode();
-        Entity e=new Entity(k,v,h);
+    public boolean put(String k, String v) {
+
+        int hash = (k == null) ? 0 : hash(k);
+        Entity e=new Entity(k,v,hash);
+
         if(this.findEntity(e,container)){
             size++;
             return true;
@@ -88,6 +92,7 @@ public class B {
      * @return:即将存储在容器中的那个索引号 不能保证唯一。
      */
     public int indexFor(int hashcode, int containerLength) {
+
         return hashcode & (containerLength-1);
 
 
@@ -104,7 +109,7 @@ public class B {
         Entity temp=container[index];
         if(temp!=null){//代表该索引下的元素已经存在，存在后，我们只能采用单向链表的形式，把元素放到此链表的最后。
             while(temp!=null){
-                if((e.key==temp.key)&&(e.hash==temp.hash)&&(e.value.equals(temp.value))){//判断该新元素e是否和容器的元素相等，如果完全相等，那么不允许添加
+                if((e.key.equals(temp.key))&&(e.hash==temp.hash)&&(e.value.equals(temp.value))){//判断该新元素e是否和容器的元素相等，如果完全相等，那么不允许添加
                     return false;
                 }else{//允许添加
 
@@ -119,8 +124,9 @@ public class B {
             }
             //加入新元素到队尾
             this.addEntry2Last(e,temp);//对每个元素的链表操作，一旦有重复值，加到它的链表中
+            return true;
         }
-        //将元素【已经排列好的，】插入到数组中。
+        //否则，加入新元素到队首
          setFirstEntry(e,index,container);
 
 
@@ -183,10 +189,10 @@ public class B {
 
     class Entity{
         Entity next;//采用挂链法，也就是说 同一个hash码中的不同子元素,next存储的是下个元素的地址
-        Integer key;//1 10
+        String key;//1 10
         String value;
         int hash;
-        Entity(Integer key ,String value,int hash){
+        Entity(String key ,String value,int hash){
             this.key=key;
             this.value=value;
             this.hash=hash;
