@@ -26,19 +26,21 @@ public class B {
     public void test(){
         long start=System.currentTimeMillis();
 
-        for(int i=0;i<13;i++){
+        for(int i=0;i<1000000;i++){
             this.put(""+i,""+i*10);
         }
         long end=System.currentTimeMillis();
         System.out.println("插入元素时间是："+(end-start));
-        System.out.println( this.get("1"));
+        System.out.println( this.get("98"));
+
     }
     //不得不像命运低头，写了好长时间，不能保证hash不重复，用jdkMap源码自带的吧
     public int hash(Object k) {//防止尽量的不出现重复
         int h = 0;
-        h ^= k.hashCode();
+        h ^= k.hashCode();//1 2 10
         h ^= (h >>> 20) ^ (h >>> 12);
         return h ^ (h >>> 7) ^ (h >>> 4);
+       // return k.hashCode();
     }
 
     public String get(String key){
